@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Залгах -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Нэрээр залгахад харилцагчийн дугаар олоход -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Мессеж илгээх -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <!-- Дуугаар команд (микрофон) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Апп-ын жагсаалт харах, нэрээр нь нээх -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Zarlig">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Zarlig">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
