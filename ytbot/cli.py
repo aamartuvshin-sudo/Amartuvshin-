@@ -5,6 +5,6 @@ from translator import translate_video
 
 if len(sys.argv) < 2:
     sys.exit("Хэрэглээ: python cli.py <youtube-линк>")
-summary, full = translate_video(
+notes, script = translate_video(
     sys.argv[1], lambda i, n: print(f"орчуулж байна {i}/{n}", file=sys.stderr))
-print("== ХУРААНГУЙ ==\n" + summary + "\n\n== БҮТЭН ОРЧУУЛГА ==\n" + full)
+print("== ГОЛ САНАА ==\n" + notes + "\n\n== ШИНЭ СКРИПТ ==\n" + script)

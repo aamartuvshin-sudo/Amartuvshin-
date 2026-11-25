@@ -44,42 +44,44 @@ def _chunks(text: str, size: int = CHUNK_CHARS):
         yield " ".join(cur)
 
 
-def translate(text: str, on_progress=None) -> str:
-    client = anthropic.Anthropic()
-    parts = list(_chunks(text))
-    out = []
-    for i, part in enumerate(parts, 1):
-        msg = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            system=(
-                "Чи мэргэжлийн орчуулагч. Өгөгдсөн видеоны хадмалыг эх хэлнээс нь "
-                "Монгол хэл (кирилл) рүү утгыг нь алдагдуулахгүй, ойлгомжтой, "
-                "байгалийн өнгө аясаар орчуул. Өгүүлбэр, догол мөрөнд хуваа. "
-                "Зөвхөн орчуулгыг гарга, тайлбар нэмэхгүй."
-            ),
-            messages=[{"role": "user", "content": part}],
-        )
-        out.append(msg.content[0].text.strip())
-        if on_progress:
-            on_progress(i, len(parts))
-    return "\n\n".join(out)
-
-
-def summarize(mn_text: str) -> str:
-    client = anthropic.Anthropic()
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        system="Доорх орчуулгыг Монголоор 8-10 мөр товч хураангуйл, гол санаануудыг тусд нь тэмдэглэ.",
-        messages=[{"role": "user", "content": mn_text[:60000]}],
+def _ask(system: str, content: str, max_tokens: int = 2048) -> str:
+    msg = anthropic.Anthropic().messages.create(
+        model=MODEL, max_tokens=max_tokens, system=system,
+        messages=[{"role": "user", "content": content}],
     )
     return msg.content[0].text.strip()
 
 
-def translate_video(url: str, on_progress=None) -> tuple[str, str]:
+def extract_ideas(text: str, on_progress=None) -> str:
+    """Хэсэг бүрээс гол санааг Монголоор товч тэмдэглэнэ (үгчилэн орчуулахгүй)."""
+    parts = list(_chunks(text))
+    notes = []
+    for i, part in enumerate(parts, 1):
+        notes.append(_ask(
+            "Видеоны хадмалаас ГОЛ САНАА, баримт, жишээ, дүгнэлтийг Монгол хэлээр "
+            "5-8 товч тэмдэглэл болгон гарга. Үгчилэн орчуулахгүй, өгүүлбэр хуулахгүй, "
+            "зөвхөн санааг өөрийн үгээр бич.",
+            part, 1024))
+        if on_progress:
+            on_progress(i, len(parts))
+    return "\n".join(notes)
+
+
+def write_original_script(notes: str, minutes: int = 10) -> str:
+    """Тэмдэглэлээс шинэ бүтэцтэй, өөрийн өнгө аястай Монгол скрипт бичнэ."""
+    return _ask(
+        "Чи Монгол YouTube контент бүтээгч. Өгөгдсөн санааны тэмдэглэлээс "
+        f"~{minutes} минутын ШИНЭ, ОРИГИНАЛ скрипт бич. Эх видеоны бүтэц, дараалал, "
+        "өгүүлбэрийг дагахгүй: өөрийн hook, өөрийн бүтэц, Монгол хүнд ойр жишээ ашигла. "
+        "Шинжлэх ухааны баталгаагүй зүйлийг баримт мэт бүү танилц, 'нэг үзэл бодол' "
+        "гэж тодорхой хэл. Бүтэц: Hook, Үндсэн хэсгүүд, Дүгнэлт.",
+        notes[:60000], 4096)
+
+
+def translate_video(url: str, on_progress=None, minutes: int = 10) -> tuple[str, str]:
+    """(гол санаанууд, шинэ оригинал скрипт) буцаана."""
     vid = extract_video_id(url)
     if not vid:
         raise ValueError("YouTube линк танигдсангүй")
-    mn = translate(fetch_transcript(vid), on_progress)
-    return summarize(mn), mn
+    notes = extract_ideas(fetch_transcript(vid), on_progress)
+    return notes, write_original_script(notes, minutes)

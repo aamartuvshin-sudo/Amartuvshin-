@@ -9,8 +9,8 @@ from telegram.ext import (Application, CommandHandler, ContextTypes,
 
 from translator import extract_video_id, translate_video
 
-START = ("Сайн уу! YouTube линк илгээвэл би хадмалыг нь Монгол хэл рүү "
-         "орчуулж, хураангуйг нь болон бүтэн орчуулгыг .txt файлаар илгээнэ.")
+START = ("Сайн уу! YouTube линк илгээвэл би гол санааг нь Монголоор гаргаж, "
+         "үгчилэн орчуулахгүйгээр ШИНЭ оригинал скрипт бичиж өгнө.")
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -25,15 +25,15 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     status = await update.message.reply_text("⏳ Хадмал татаж байна...")
     try:
-        summary, full = await asyncio.to_thread(translate_video, text)
+        notes, script = await asyncio.to_thread(translate_video, text)
     except Exception as e:
         await status.edit_text(f"❌ Алдаа: {e}\n(Хадмалгүй видео байж болно)")
         return
     await status.delete()
-    await update.message.reply_text(f"📝 Хураангуй\n\n{summary}"[:4000])
-    f = io.BytesIO(full.encode("utf-8"))
-    f.name = f"{vid}_mn.txt"
-    await update.message.reply_document(f, caption="Бүтэн орчуулга")
+    await update.message.reply_text(f"📝 Гол санаанууд\n\n{notes}"[:4000])
+    f = io.BytesIO(script.encode("utf-8"))
+    f.name = f"{vid}_script.txt"
+    await update.message.reply_document(f, caption="Шинэ оригинал скрипт")
 
 
 def main():
